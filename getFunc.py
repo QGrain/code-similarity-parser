@@ -2,16 +2,31 @@ import os
 import sys
 
 
+def checkStart(string, start_list):
+    for i, s in enumerate(start_list):
+        l = len(s)
+        if string[:l] == s:
+            return i
+    return -1
+
+
 def trim(string):
     '''
     输入：参数名：string。类型：str。含义：所解析源代码的一行字符串
-    返回：返回去掉string尾部换行符和首尾空格符的字符串
+    返回：返回去掉string尾部换行符和首尾空格符的字符串，以及去掉while，if或者for等条件控制关键字的开头
     '''
+    start_list = ["while", "if", "for", "else if", "switch", "(", "=", "+", "-", " "]
+
     if len(string) <= 1:
         return string
     while string[-1] == "\n":
         string = string[:-1]
-    return string.strip()
+    string = string.strip()
+
+    while checkStart(string, start_list) != -1:
+        i = checkStart(string, start_list)
+        string = string[len(start_list[i]):]
+    return string
 
 
 def print_line(d):
@@ -23,7 +38,7 @@ def print_line(d):
     for l in d:
         if l == "fname":
             continue
-        print("%s() \t appears at line" %l, d[l], "for %d times."%len(d[l]))
+        print("%s() \t\t\t appears at line" %l, d[l], "for %d times."%len(d[l]))
 
 
 def extracFuncName(func_str):
@@ -53,31 +68,37 @@ def getFunc(fname):
 
     len_lines = len(lines)
     # 尽量剔除常见的函数调用或者C关键字
-    keywords_list = ["while(", "if(", "for(", "do(", "switch(", "malloc(", "free(", "open(", "close(", "return(", "printf", "sizeof(", 
+    keywords_list = ["while(", "if(", "for(", "do(", "switch(", "malloc(", " free(", " open(", " close(", " return(", "printf",  
                     "putc", "fputs", "fflush", "exit(", "error(", "atoi", "read(", "write(", "fgets", "*(", "memset(", "memcpy(",  
-                    "strtol", "strdup", "strlen", "strncpy", "strcpy", "strncmp", "strftime", "dirname"]
+                    "strtol", "strdup", "strlen", "strncpy", "strcpy", "strncmp", "strftime", "dirname", "fcntl(", "fclose(", 
+                    "sizeof("]
     for i in range(1, len_lines):
         go_next = 0
-        if '(' in lines[i-1] and ')' in lines[i-1]:
+        if '(' in lines[i-1]:
             for k in keywords_list:
                 if k in lines[i-1]:
                     go_next = 1
             if go_next == 1:
                 continue
+            func_name = extracFuncName(lines[i-1])
             if ';' in lines[i-1]:
-                func_name = extracFuncName(lines[i-1])
                 if func_name != '':
                     if func_name not in func_calls:
-                        func_calls[func_name] = [i+1]
+                        func_calls[func_name] = [i]
                     else:
-                        func_calls[func_name].append(i+1)
+                        func_calls[func_name].append(i)
             elif '{' in lines[i]:
-                func_name = extracFuncName(lines[i-1])
                 if func_name != '':
                     if func_name not in func_defs:
-                        func_defs[func_name] = [i+1]
+                        func_defs[func_name] = [i]
                     else:
-                        func_defs[func_name].append(i+1)
+                        func_defs[func_name].append(i)
+            else:
+                if func_name != '':
+                    if func_name not in func_calls:
+                        func_calls[func_name] = [i]
+                    else:
+                        func_calls[func_name].append(i)
 
     return (func_calls, func_defs)
 

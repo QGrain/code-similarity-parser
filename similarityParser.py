@@ -65,6 +65,7 @@ def parseSimilarity(P1, P2, L):
     (calls_2, defs_2) = getFunc(P2)
     out_calls_2 = getOutCalls(calls_2, defs_2)
     (calls_L, defs_L) = getFunc(L)
+    # print_line(defs_L)
 
     P1_name = P1.split("/")[-1]
     P2_name = P2.split("/")[-1]
@@ -90,7 +91,8 @@ if __name__ == "__main__":
         P2 = sys.argv[2]
         L = sys.argv[3]
     else:
-        P1 = "../tcpdump-4.9.2/tcpdump.c"
-        P2 = "../tcpreplay-4.3.1/src/tcpreplay.c"
+        P1 = "../tcpreplay-4.3.1-compiled/src/tcpedit/tcpedit.c"
+        P2 = "../tcpdump-4.9.2/tcpdump.c"
+        # P2 = "../tcpreplay-4.3.1/src/tcpreplay.c"
         L = "../libpcap-1.8.1/pcap.c"
     parseSimilarity(P1, P2, L)
